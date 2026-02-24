@@ -30,6 +30,7 @@ model Category {
 model Product {
   id          Int            @id @default(autoincrement())
   title       String
+  slug        String?        @unique
   description String         @default("")
   price       Float
   ebayUrl     String?

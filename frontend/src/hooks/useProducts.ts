@@ -41,6 +41,18 @@ export function useProduct(id: number | undefined) {
   });
 }
 
+export function useProductBySlug(slug: string | undefined) {
+  return useQuery<ApiResponse<Product>>({
+    queryKey: ["products", "slug", slug],
+    queryFn: async () => {
+      const res = await api.get(`/api/products/slug/${slug}`);
+      return res.data;
+    },
+    enabled: !!slug,
+    retry: false,
+  });
+}
+
 // ─── Admin ────────────────────────────────────────────────────
 
 export function useAdminProducts() {

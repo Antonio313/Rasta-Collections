@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { HomePage } from "@/pages/public/HomePage";
 import { ListingsPage } from "@/pages/public/ListingsPage";
 import { ContactPage } from "@/pages/public/ContactPage";
+import { ProductDetailPage } from "@/pages/public/ProductDetailPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { LoginPage } from "@/pages/admin/LoginPage";
 import { DashboardPage } from "@/pages/admin/DashboardPage";
@@ -23,6 +24,7 @@ function App() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/listings" element={<ListingsPage />} />
+          <Route path="/listings/:slug" element={<ProductDetailPage />} />
           <Route path="/contact" element={<ContactPage />} />
         </Route>
 

@@ -107,7 +107,7 @@ export function ProductTable({ products, isLoading }: ProductTableProps) {
                 <TableCell>
                   {product.images[0] ? (
                     <img
-                      src={`${apiUrl}${product.images[0].url}`}
+                      src={product.images[0].url.startsWith("http") ? product.images[0].url : `${apiUrl}${product.images[0].url}`}
                       alt={product.title}
                       className="h-10 w-10 rounded object-cover"
                     />

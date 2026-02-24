@@ -1,6 +1,7 @@
 export interface Product {
   id: number;
   title: string;
+  slug: string | null;
   description: string;
   price: number;
   ebayUrl: string | null;

@@ -15,6 +15,20 @@ const productInclude = {
   images: { orderBy: { displayOrder: "asc" as const } },
 };
 
+async function generateUniqueProductSlug(title: string, excludeId?: number): Promise<string> {
+  const base = slugify(title, { lower: true, strict: true });
+  let slug = base;
+  let suffix = 2;
+
+  while (true) {
+    const existing = await prisma.product.findUnique({ where: { slug } });
+    if (!existing || existing.id === excludeId) break;
+    slug = `${base}-${suffix++}`;
+  }
+
+  return slug;
+}
+
 // ─── Dashboard ────────────────────────────────────────────────
 
 export async function getDashboardStats(
@@ -73,8 +87,10 @@ export async function createProduct(
       throw new AppError(400, "Category not found");
     }
 
+    const slug = await generateUniqueProductSlug(data.title);
+
     const product = await prisma.product.create({
-      data,
+      data: { ...data, slug },
       include: productInclude,
     });
 
@@ -101,9 +117,13 @@ export async function updateProduct(
       if (!category) throw new AppError(400, "Category not found");
     }
 
+    const slugUpdate = data.title
+      ? { slug: await generateUniqueProductSlug(data.title, id) }
+      : {};
+
     const product = await prisma.product.update({
       where: { id },
-      data,
+      data: { ...data, ...slugUpdate },
       include: productInclude,
     });
 

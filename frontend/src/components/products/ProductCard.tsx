@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { ProductImage } from "./ProductImage";
 import { FeaturedBadge } from "./FeaturedBadge";
@@ -10,9 +10,13 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const mainImage = product.images[0]?.url;
+  const href = `/listings/${product.slug ?? product.id}`;
 
   return (
-    <div className="group relative overflow-hidden rounded-lg border bg-white shadow-sm transition-shadow hover:shadow-md">
+    <Link
+      to={href}
+      className="group relative block overflow-hidden rounded-lg border bg-white shadow-sm transition-shadow hover:shadow-md"
+    >
       {/* Featured badge */}
       {product.featured && <FeaturedBadge />}
 
@@ -38,23 +42,12 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.description}
           </p>
         )}
-        <div className="mt-3 flex items-center justify-between">
+        <div className="mt-3">
           <span className="text-lg font-bold text-rasta-green">
             ${product.price.toFixed(2)}
           </span>
-          {product.ebayUrl && (
-            <a
-              href={product.ebayUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-md bg-rasta-green px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-rasta-green/90"
-            >
-              View on eBay
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

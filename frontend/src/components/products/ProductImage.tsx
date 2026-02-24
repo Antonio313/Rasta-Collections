@@ -21,9 +21,12 @@ export function ProductImage({ src, alt, className = "" }: ProductImageProps) {
     );
   }
 
+  // Full URLs (S3) are used as-is; relative paths are prefixed with the API URL (legacy)
+  const imgSrc = src.startsWith("http") ? src : `${apiUrl}${src}`;
+
   return (
     <img
-      src={`${apiUrl}${src}`}
+      src={imgSrc}
       alt={alt}
       className={`object-cover ${className}`}
       onError={() => setError(true)}

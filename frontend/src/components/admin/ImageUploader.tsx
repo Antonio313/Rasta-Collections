@@ -115,7 +115,7 @@ export function ImageUploader({ productId, images }: ImageUploaderProps) {
               }`}
             >
               <img
-                src={`${apiUrl}${image.url}`}
+                src={image.url.startsWith("http") ? image.url : `${apiUrl}${image.url}`}
                 alt={`Product image ${idx + 1}`}
                 className="h-full w-full object-cover"
               />

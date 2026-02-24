@@ -22,9 +22,6 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded images in development
-app.use("/uploads", express.static("uploads"));
-
 // Health check
 app.get("/api/health", (_req, res) => {
   res.json({ data: { status: "ok" }, message: "Server is running" });

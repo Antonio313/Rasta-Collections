@@ -14,7 +14,7 @@ and view contact messages.
 - Backend: Node.js, Express 4, TypeScript
 - ORM: Prisma
 - Database: PostgreSQL 18 (local for dev, Railway plugin for prod)
-- Image Storage: Local filesystem for dev, AWS S3 for prod (+ Sharp for compression)
+- Image Storage: AWS S3 (bucket: rasta-collections-uploads, region: us-east-1) + Sharp for compression
 - Auth: JWT (access + refresh tokens, httpOnly cookies)
 - Deployment: Railway (backend + frontend + DB)
 
@@ -39,13 +39,16 @@ Custom CSS variables defined in frontend/src/index.css:
 
 ## Key Conventions
 - All API routes prefixed with /api
-- Images stored locally in /backend/uploads/ during dev, S3 in production
-- All images compressed to max 1200px wide, converted to WebP via Sharp
+- Images uploaded to S3, stored as full HTTPS URLs in the DB (e.g. https://rasta-collections-uploads.s3.us-east-1.amazonaws.com/products/filename.webp)
+- All images compressed to max 1200px wide, converted to WebP via Sharp before upload
+- S3 bucket is public-read — images served directly from S3, no Express proxy
+- ProductImage component handles both full URLs (S3) and legacy relative paths
 - Helmet configured with `crossOriginResourcePolicy: "cross-origin"` for cross-origin image loading
 - JWT access token: 15min expiry. Refresh token: 7 days, httpOnly cookie
 - Prisma client imported from @/lib/prisma (singleton pattern)
 - Zod schemas live in /shared/schemas — imported by both frontend and backend
 - Category slugs are auto-generated from category name (lowercase, hyphenated)
+- Product slugs are auto-generated from title using slugify (unique, appends -2/-3 on collision)
 - Use async/await throughout, no .then() chains
 - Error handling via centralized Express error middleware
 - All API responses follow { data, error, message } shape
@@ -59,6 +62,7 @@ Custom CSS variables defined in frontend/src/index.css:
 Public pages:
 - / (HomePage) — Hero with logo + rasta stripes, featured products, about section
 - /listings (ListingsPage) — Search + category filter + paginated product grid
+- /listings/:slug (ProductDetailPage) — Two-column product detail: image gallery + details, Purchase on eBay CTA
 - /contact (ContactPage) — Contact info cards + validated form
 - /* (NotFoundPage) — 404 catch-all
 
@@ -95,10 +99,10 @@ Backend .env:
   PORT=3000
   FRONTEND_URL=http://localhost:5173
   CONTACT_EMAIL (Clive's email for contact form notifications)
-  AWS_ACCESS_KEY_ID (production only)
-  AWS_SECRET_ACCESS_KEY (production only)
-  AWS_BUCKET_NAME (production only)
-  AWS_REGION (production only)
+  AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY
+  AWS_BUCKET_NAME=rasta-collections-uploads
+  AWS_REGION=us-east-1
 
 Frontend .env:
   VITE_API_URL=http://localhost:3000
@@ -120,3 +124,6 @@ Frontend .env:
 [x] Phase 4 - Public Frontend
 [x] Phase 5 - Polish & Deploy
 [x] Bug fixes - Inline category creation, image upload in create flow, navbar dropdown, hero logo, button contrast fix, Helmet CORS fix
+[x] Product detail pages — /listings/:slug with image gallery, full description, Purchase on eBay CTA
+[x] S3 image storage — all uploads go to rasta-collections-uploads bucket, full URLs stored in DB
+[x] Admin image display fix — ProductTable and ImageUploader handle full S3 URLs correctly

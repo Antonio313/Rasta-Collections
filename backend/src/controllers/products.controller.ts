@@ -103,3 +103,28 @@ export async function getProductById(
     next(err);
   }
 }
+
+export async function getProductBySlug(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const slug = Array.isArray(req.params.slug)
+      ? req.params.slug[0]
+      : req.params.slug;
+
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      include: productInclude,
+    });
+
+    if (!product || !product.visible) {
+      throw new AppError(404, "Product not found");
+    }
+
+    res.json({ data: product });
+  } catch (err) {
+    next(err);
+  }
+}

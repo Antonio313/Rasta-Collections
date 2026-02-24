@@ -1,56 +1,65 @@
 import sharp from "sharp";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import path from "path";
-import fs from "fs/promises";
 
-const UPLOADS_DIR = path.resolve("uploads");
+const s3 = new S3Client({
+  region: process.env.AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
+
+const BUCKET = process.env.AWS_BUCKET_NAME!;
 const MAX_WIDTH = 1200;
-
-// Ensure uploads directory exists
-async function ensureUploadsDir() {
-  await fs.mkdir(UPLOADS_DIR, { recursive: true });
-}
 
 export async function processAndSaveImage(
   buffer: Buffer,
   productId: number,
   filename: string
 ): Promise<string> {
-  await ensureUploadsDir();
-
-  const productDir = path.join(UPLOADS_DIR, String(productId));
-  await fs.mkdir(productDir, { recursive: true });
-
-  // Convert filename to .webp
   const baseName = path.parse(filename).name;
-  const webpFilename = `${baseName}-${Date.now()}.webp`;
-  const outputPath = path.join(productDir, webpFilename);
+  const key = `products/${baseName}-${Date.now()}.webp`;
 
-  await sharp(buffer)
+  const webpBuffer = await sharp(buffer)
     .resize(MAX_WIDTH, undefined, { withoutEnlargement: true })
     .webp({ quality: 80 })
-    .toFile(outputPath);
+    .toBuffer();
 
-  // Return the URL path (relative to the server)
-  return `/uploads/${productId}/${webpFilename}`;
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: webpBuffer,
+      ContentType: "image/webp",
+    })
+  );
+
+  return `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 }
 
 export async function deleteImage(imageUrl: string): Promise<void> {
-  // imageUrl is like /uploads/1/filename.webp
-  const filePath = path.join(path.resolve("."), imageUrl);
-
   try {
-    await fs.unlink(filePath);
+    const url = new URL(imageUrl);
+    const key = url.pathname.slice(1); // strip leading /
+
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+      })
+    );
   } catch (err) {
-    console.error(`Failed to delete image file: ${filePath}`, err);
+    console.error(`Failed to delete S3 object: ${imageUrl}`, err);
   }
 }
 
 export async function deleteProductImages(productId: number): Promise<void> {
-  const productDir = path.join(UPLOADS_DIR, String(productId));
-
-  try {
-    await fs.rm(productDir, { recursive: true, force: true });
-  } catch (err) {
-    console.error(`Failed to delete product image directory: ${productDir}`, err);
-  }
+  // Individual images are deleted via deleteImage when removed through the UI.
+  // Kept for interface compatibility.
+  console.log(`deleteProductImages called for product ${productId}`);
 }
